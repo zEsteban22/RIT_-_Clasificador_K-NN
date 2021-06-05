@@ -1,6 +1,9 @@
 #Fecha creación 03/06/2021 a las 11:53
 #Por Esteban Cruz López
 
+#Variable fundamental del método de clasificación
+K=3
+
 #Variable global para manejar la colección de entrenamiento
 trainingSet=[]
 testSet=[]
@@ -11,11 +14,8 @@ class Documento:
         self.docId=docId
         self.clase=clase
         self.numTerminos=numTerminos
-        self.pesosXTermino=generarMapaPesosXTermino(pesosXTermino)
-
-#Función para generar un mapa de los pesos por termino presentes en los documentos
-def generarMapaPesosXTermino(pesosXTermino):
-    return dict([par.split("/")for par in pesosXTermino.split(" ")])
+        self.pesosXTermino=dict([par.split("/")for par in pesosXTermino.split(" ")])
+        
 
 #Se llena la lista de la colección con los documentos extraídos de training-set.csv
 with open ("training-set.csv")as trainingDoc:
@@ -25,9 +25,23 @@ with open ("training-set.csv")as trainingDoc:
 with open ("test-set.csv") as testDoc:
     testSet=[Documento(*linea.split("\t")) for linea in trainingDoc.readlines()]
 
+def realizarConsulta(testDoc):
+    similitudes={}
+    for trainingDoc in trainingSet:
+        similitudes[trainingDoc]=0
+        for termino,peso in testDoc.pesosXTermino.items():
+            if termino in trainingDoc.pesosXTermino:
+                similitudes[trainingDoc]+=peso*trainingDoc.pesosXTermino[termino]
+    #Se crea el escalafón y se ordena de manera descendente
+    escalafon=similitudes.items()
+    escalafon.sort(lambda x,y:x[1]>y[1])
+    return escalafon
+
 for testDoc in testSet:
-    #Ejecutar como consulta el testDoc en el set de entrenamiento
-    #Sacar el escalafón
-    #Escoger los k más relevantes
-    #Promediar las calificaciones por clase 
-    #Asignar al testDoc, la clase con mejor promedio
+    #Se obtiene el escalafón
+    escalafon=realizarConsulta(testDoc)
+    
+    #Se analizan los K más relevantes
+    for doc,sim in escalafon[:K]:
+        #Escoger la clase para testDoc
+#Hacer el análisis de resultados
